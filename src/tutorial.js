@@ -64,13 +64,16 @@ function paintCanvas(w, h, draw) {
 }
 
 // Cumulative render: palette colors in `includedSet` are painted; others = paper white.
-function renderCumulative(imageData, assignment, palette, includedSet) {
+// Background pixels (mask falsy) are always left as paper.
+function renderCumulative(imageData, assignment, palette, includedSet, mask) {
   const { width: w, height: h } = imageData
   return paintCanvas(w, h, (out) => {
     for (let p = 0; p < assignment.length; p++) {
       const o = p * 4
       const idx = assignment[p]
-      if (includedSet.has(idx)) {
+      if (mask && !mask[p]) {
+        out[o] = out[o + 1] = out[o + 2] = 255
+      } else if (includedSet.has(idx)) {
         const [r, g, b] = palette[idx].rgb
         out[o] = r
         out[o + 1] = g
@@ -84,12 +87,14 @@ function renderCumulative(imageData, assignment, palette, includedSet) {
 }
 
 // Highlight only the pixels painted in this step over a faded base.
-function renderMask(imageData, assignment, palette, stepSet) {
+function renderMask(imageData, assignment, palette, stepSet, mask) {
   const { width: w, height: h } = imageData
   return paintCanvas(w, h, (out) => {
     for (let p = 0; p < assignment.length; p++) {
       const o = p * 4
-      if (stepSet.has(assignment[p])) {
+      if (mask && !mask[p]) {
+        out[o] = out[o + 1] = out[o + 2] = 255
+      } else if (stepSet.has(assignment[p])) {
         const [r, g, b] = palette[assignment[p]].rgb
         out[o] = r
         out[o + 1] = g
@@ -105,7 +110,8 @@ function renderMask(imageData, assignment, palette, stepSet) {
 
 // Build the layer steps (caller prepends the sketch step).
 // palette entries are expected to carry an optional `recipe`.
-export function buildLayerSteps(imageData, palette, maxSteps = 5) {
+// `mask` (optional) limits painting to the subject; background stays as paper.
+export function buildLayerSteps(imageData, palette, maxSteps = 5, mask = null) {
   const assignment = assignPixels(imageData, palette)
   const groups = groupByLuminance(palette, maxSteps)
   const included = new Set()
@@ -119,8 +125,8 @@ export function buildLayerSteps(imageData, palette, maxSteps = 5) {
       kind: 'layer',
       title: `Layer ${gi + 1} — ${describeTone(gi, groups.length)}`,
       instruction: buildInstruction(gi, groups.length, colors),
-      imageDataUrl: renderCumulative(imageData, assignment, palette, new Set(included)).toDataURL('image/png'),
-      maskDataUrl: renderMask(imageData, assignment, palette, stepSet).toDataURL('image/png'),
+      imageDataUrl: renderCumulative(imageData, assignment, palette, new Set(included), mask).toDataURL('image/png'),
+      maskDataUrl: renderMask(imageData, assignment, palette, stepSet, mask).toDataURL('image/png'),
       colors,
     })
   })

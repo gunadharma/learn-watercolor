@@ -40,18 +40,44 @@ export function getImageData(canvas) {
 }
 
 // Extract [r,g,b] pixels, optionally sampling every `step` pixels for speed.
-export function pixelsFrom(imageData, step = 1) {
+// If `mask` is given, only foreground pixels (mask[pixelIndex] truthy) are kept.
+export function pixelsFrom(imageData, step = 1, mask = null) {
   const { data } = imageData
   const out = []
   for (let i = 0; i < data.length; i += 4 * step) {
     if (data[i + 3] < 128) continue // skip transparent
+    if (mask && !mask[i >> 2]) continue // skip background
     out.push([data[i], data[i + 1], data[i + 2]])
   }
   return out
 }
 
+// Render the original image with the background replaced by paper white.
+export function cutoutCanvas(imageData, mask) {
+  const { width: w, height: h, data } = imageData
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  const out = ctx.createImageData(w, h)
+  for (let p = 0; p < w * h; p++) {
+    const o = p * 4
+    if (!mask || mask[p]) {
+      out.data[o] = data[o]
+      out.data[o + 1] = data[o + 1]
+      out.data[o + 2] = data[o + 2]
+    } else {
+      out.data[o] = out.data[o + 1] = out.data[o + 2] = 255
+    }
+    out.data[o + 3] = 255
+  }
+  ctx.putImageData(out, 0, 0)
+  return canvas
+}
+
 // Sobel edge magnitude -> a white canvas with dark outlines (the "sketch").
-export function sketchCanvas(imageData, threshold = 0.18) {
+// If `mask` is given, background pixels are left as blank paper.
+export function sketchCanvas(imageData, mask = null, threshold = 0.18) {
   const { width: w, height: h, data } = imageData
   const gray = new Float32Array(w * h)
   for (let i = 0; i < w * h; i++) {
@@ -80,9 +106,10 @@ export function sketchCanvas(imageData, threshold = 0.18) {
           k++
         }
       }
-      const mag = Math.hypot(sx, sy)
-      const edge = mag > threshold ? 1 : 0
       const o = (y * w + x) * 4
+      const inBg = mask && !mask[y * w + x]
+      const mag = inBg ? 0 : Math.hypot(sx, sy)
+      const edge = mag > threshold ? 1 : 0
       // Dark line on white paper, softened by magnitude.
       const tone = edge ? Math.max(40, 255 - Math.min(255, mag * 320)) : 255
       odata.data[o] = tone

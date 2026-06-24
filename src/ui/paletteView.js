@@ -11,7 +11,8 @@ export function renderPalette(s) {
     )}<div class="center"><button class="btn" data-action="go-analyze">Ke Upload & Analisa</button></div></section>`
   }
 
-  const { palette, imageDataUrl } = s.analysis
+  const { palette, objectDataUrl, imageDataUrl } = s.analysis
+  const refImg = objectDataUrl || imageDataUrl
   const poor = palette.filter((c) => c.recipe && c.recipe.quality === 'poor').length
 
   const cards = palette
@@ -40,7 +41,7 @@ export function renderPalette(s) {
       </div>
 
       <div class="palette-overview">
-        <img class="ref-thumb" src="${imageDataUrl}" alt="Foto acuan">
+        <img class="ref-thumb" src="${refImg}" alt="Objek yang dianalisa">
         <div class="palette-strip">
           ${palette.map((c) => `<span class="strip-cell" style="--c:${c.hex}" title="${c.hex}"></span>`).join('')}
         </div>

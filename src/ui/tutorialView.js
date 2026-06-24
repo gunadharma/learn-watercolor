@@ -11,7 +11,8 @@ export function renderTutorial(s) {
     )}<div class="center"><button class="btn" data-action="go-analyze">Ke Upload & Analisa</button></div></section>`
   }
 
-  const { sketchDataUrl, steps, imageDataUrl } = s.analysis
+  const { sketchDataUrl, steps, objectDataUrl, imageDataUrl } = s.analysis
+  const refImg = objectDataUrl || imageDataUrl
 
   const sketchCard = `
     <article class="step-card">
@@ -21,7 +22,7 @@ export function renderTutorial(s) {
         <p>Mulai dengan menjiplak garis besar objek pakai pensil tipis. Gunakan gambar ini sebagai panduan kontur. Jangan tekan terlalu keras agar garis tidak terlihat setelah dicat.</p>
         <div class="step-images">
           <figure><img src="${sketchDataUrl}" alt="Sketsa"><figcaption>Panduan garis</figcaption></figure>
-          <figure><img src="${imageDataUrl}" alt="Acuan"><figcaption>Foto acuan</figcaption></figure>
+          <figure><img src="${refImg}" alt="Acuan objek"><figcaption>Objek acuan</figcaption></figure>
         </div>
         <a class="btn ghost small" href="${sketchDataUrl}" download="langkah-0-sketsa.png">⤓ Unduh sketsa</a>
       </div>

@@ -10,6 +10,9 @@ foto yang ingin dilukis, lalu aplikasi akan:
 3. **Menyusun tutorial melukis bertahap** dari terang ke gelap (jumlah langkah otomatis
    dari rentang tonal gambar), dengan gambar acuan dan highlight area di setiap langkah.
 
+Analisa berfokus pada **objek saja** — background dideteksi & dihapus otomatis, jadi
+palet dan tutorial tidak terganggu warna latar.
+
 Cat air dicatat dengan memilih dari **grid swatch pigmen** cat air umum, bukan color
 picker bebas — agar warna tetap realistis.
 
@@ -22,6 +25,7 @@ ke mana pun. Koleksi cat tersimpan di `localStorage` dan bisa di-export/import s
 
 | Fitur | Teknik |
 |---|---|
+| Fokus objek | Deteksi background via flood-fill dari tepi gambar berdasarkan warna latar dominan |
 | Palet warna | Kuantisasi median-cut di ruang **CIELAB** (perseptual) + merge warna mirip (ΔE) + ukuran palet otomatis |
 | Jumlah langkah | Otomatis dari rentang tonal palet (3–5 layer) |
 | Pencocokan warna | Jarak persepsi CIEDE2000 di ruang warna CIELAB |
@@ -58,6 +62,7 @@ src/
   color.js        konversi warna + CIEDE2000
   mixer.js        model pencampuran subtraktif + pencarian resep
   quantize.js     kuantisasi warna perseptual + ukuran palet otomatis
+  foreground.js   deteksi & hapus background (analisa objek saja)
   pigments.js     daftar warna pigmen cat air umum (grid swatch)
   image.js        muat & proses gambar (canvas, Sobel)
   tutorial.js     bangun langkah melukis bertahap

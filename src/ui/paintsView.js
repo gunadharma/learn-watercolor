@@ -61,13 +61,21 @@ export function bindPaints(root, onError) {
   const hexField = root.querySelector('input[name="hex"]')
   const nameInput = root.querySelector('input[name="name"]')
 
+  // Track the last name we auto-filled so switching pigments updates the name,
+  // while a name the user typed themselves is preserved.
+  let lastAutoName = ''
+
   grid?.addEventListener('click', (e) => {
     const btn = e.target.closest('.pigment')
     if (!btn) return
     grid.querySelectorAll('.pigment.selected').forEach((b) => b.classList.remove('selected'))
     btn.classList.add('selected')
     hexField.value = btn.dataset.hex
-    if (!nameInput.value.trim()) nameInput.value = btn.dataset.name
+    const current = nameInput.value.trim()
+    if (current === '' || current === lastAutoName) {
+      nameInput.value = btn.dataset.name
+      lastAutoName = btn.dataset.name
+    }
   })
 
   root.querySelector('[data-action="add-paint"]')?.addEventListener('submit', (e) => {
