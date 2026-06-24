@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groupByLuminance, assignPixels } from './tutorial.js'
+import { groupByLuminance, assignPixels, suggestStepCount } from './tutorial.js'
 
 const palette = [
   { rgb: [250, 250, 250] }, // lightest
@@ -23,6 +23,21 @@ describe('groupByLuminance', () => {
     const groups = groupByLuminance(palette, 3)
     const all = groups.flat().sort()
     expect(all).toEqual([0, 1, 2, 3])
+  })
+})
+
+describe('suggestStepCount', () => {
+  it('stays within 3..5', () => {
+    expect(suggestStepCount(palette)).toBeGreaterThanOrEqual(3)
+    expect(suggestStepCount(palette)).toBeLessThanOrEqual(5)
+  })
+  it('high-contrast image suggests more steps than low-contrast', () => {
+    const highContrast = [{ rgb: [250, 250, 250] }, { rgb: [5, 5, 5] }]
+    const lowContrast = [{ rgb: [128, 128, 128] }, { rgb: [150, 150, 150] }]
+    expect(suggestStepCount(highContrast)).toBeGreaterThanOrEqual(suggestStepCount(lowContrast))
+  })
+  it('empty palette defaults to 3', () => {
+    expect(suggestStepCount([])).toBe(3)
   })
 })
 

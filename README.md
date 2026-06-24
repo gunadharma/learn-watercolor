@@ -3,11 +3,15 @@
 Aplikasi web untuk **belajar melukis cat air**. Catat cat air yang kamu punya, unggah
 foto yang ingin dilukis, lalu aplikasi akan:
 
-1. **Mengekstrak palet warna** dari foto.
+1. **Mengekstrak palet warna** dari foto — jumlah warna ditentukan otomatis sesuai
+   kompleksitas gambar.
 2. **Menghitung resep campuran** — kombinasi 1–2 cat air milikmu (lengkap dengan rasio
    dan tingkat pengenceran air) untuk mencapai tiap warna.
-3. **Menyusun tutorial melukis bertahap** dari terang ke gelap, dengan gambar acuan dan
-   highlight area di setiap langkah.
+3. **Menyusun tutorial melukis bertahap** dari terang ke gelap (jumlah langkah otomatis
+   dari rentang tonal gambar), dengan gambar acuan dan highlight area di setiap langkah.
+
+Cat air dicatat dengan memilih dari **grid swatch pigmen** cat air umum, bukan color
+picker bebas — agar warna tetap realistis.
 
 Semua proses berjalan **di browser** — tidak ada server, tidak ada data yang dikirim
 ke mana pun. Koleksi cat tersimpan di `localStorage` dan bisa di-export/import sebagai JSON.
@@ -18,7 +22,8 @@ ke mana pun. Koleksi cat tersimpan di `localStorage` dan bisa di-export/import s
 
 | Fitur | Teknik |
 |---|---|
-| Palet warna | Kuantisasi median-cut pada foto yang sudah di-downscale |
+| Palet warna | Kuantisasi median-cut di ruang **CIELAB** (perseptual) + merge warna mirip (ΔE) + ukuran palet otomatis |
+| Jumlah langkah | Otomatis dari rentang tonal palet (3–5 layer) |
 | Pencocokan warna | Jarak persepsi CIEDE2000 di ruang warna CIELAB |
 | Pencampuran cat | Model subtraktif (weighted geometric mean reflektansi, ala Beer–Lambert) + pengenceran air |
 | Tutorial bertahap | Layer kumulatif terang→gelap + deteksi tepi Sobel untuk sketsa |
@@ -52,7 +57,8 @@ benar di URL GitHub Pages.
 src/
   color.js        konversi warna + CIEDE2000
   mixer.js        model pencampuran subtraktif + pencarian resep
-  quantize.js     kuantisasi warna median-cut
+  quantize.js     kuantisasi warna perseptual + ukuran palet otomatis
+  pigments.js     daftar warna pigmen cat air umum (grid swatch)
   image.js        muat & proses gambar (canvas, Sobel)
   tutorial.js     bangun langkah melukis bertahap
   analyze.js      orkestrasi: foto -> palet + resep + tutorial

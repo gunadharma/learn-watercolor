@@ -1,25 +1,27 @@
 // Orchestrates a full analysis: photo -> palette + recipes + tutorial steps.
 import { imageToCanvas, getImageData, pixelsFrom, sketchCanvas } from './image.js'
-import { quantize } from './quantize.js'
+import { quantizeAuto } from './quantize.js'
 import { findRecipe } from './mixer.js'
-import { buildLayerSteps } from './tutorial.js'
+import { buildLayerSteps, suggestStepCount } from './tutorial.js'
 import { rgbToHex } from './color.js'
 
-// img: HTMLImageElement, paints: owned paints, paletteSize, maxSteps.
-export function analyzeImage(img, paints, { paletteSize = 8, maxSteps = 5 } = {}) {
+// img: HTMLImageElement, paints: owned paints. Palette size and step count are
+// derived automatically from the image.
+export function analyzeImage(img, paints) {
   const canvas = imageToCanvas(img)
   const imageData = getImageData(canvas)
 
   // Sample pixels for quantization speed on large images.
   const sampleStep = Math.max(1, Math.round((canvas.width * canvas.height) / 60000))
-  const palette = quantize(pixelsFrom(imageData, sampleStep), paletteSize).map((c) => ({
+  const ownedPaints = withRgb(paints)
+  const palette = quantizeAuto(pixelsFrom(imageData, sampleStep)).map((c) => ({
     ...c,
     hex: rgbToHex(c.rgb),
-    recipe: findRecipe(c.rgb, withRgb(paints)),
+    recipe: findRecipe(c.rgb, ownedPaints),
   }))
 
   const sketchDataUrl = sketchCanvas(imageData).toDataURL('image/png')
-  const steps = buildLayerSteps(imageData, palette, maxSteps)
+  const steps = buildLayerSteps(imageData, palette, suggestStepCount(palette))
 
   return {
     imageDataUrl: canvas.toDataURL('image/png'),

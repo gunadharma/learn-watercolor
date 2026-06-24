@@ -1,6 +1,16 @@
 // Build a light-to-dark, cumulative step-by-step painting tutorial from a photo.
 import { luminance } from './color.js'
 
+// Suggest how many painting layers suit the image, from its tonal range.
+// Wider light-to-dark spread => more washes worth building up. Clamped to 3..5.
+export function suggestStepCount(palette) {
+  if (!palette || palette.length === 0) return 3
+  const lums = palette.map((c) => luminance(c.rgb))
+  const range = Math.max(...lums) - Math.min(...lums)
+  const steps = Math.round(2 + range * 3.5)
+  return Math.max(3, Math.min(5, Math.min(steps, palette.length)))
+}
+
 // Group palette indices into ordered steps, lightest first.
 // Returns an array of groups; each group is an array of palette indices.
 export function groupByLuminance(palette, maxSteps) {

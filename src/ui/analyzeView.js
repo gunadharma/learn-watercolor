@@ -32,16 +32,7 @@ export function renderAnalyze(s) {
         ${preview}
       </label>
 
-      <div class="controls">
-        <label class="control">Jumlah warna palet
-          <input type="range" min="6" max="12" value="8" data-action="palette-size">
-          <output data-out="palette-size">8</output>
-        </label>
-        <label class="control">Jumlah langkah tutorial
-          <input type="range" min="3" max="5" value="4" data-action="max-steps">
-          <output data-out="max-steps">4</output>
-        </label>
-      </div>
+      <p class="muted center auto-note">Jumlah warna palet & langkah tutorial ditentukan otomatis sesuai gambar.</p>
 
       <div class="center">
         <button class="btn primary" data-action="analyze" ${pendingImg && !s.analyzing ? '' : 'disabled'}>
@@ -69,22 +60,13 @@ export function bindAnalyze(root, onError) {
     }
   })
 
-  for (const key of ['palette-size', 'max-steps']) {
-    const slider = root.querySelector(`[data-action="${key}"]`)
-    slider?.addEventListener('input', () => {
-      root.querySelector(`[data-out="${key}"]`).textContent = slider.value
-    })
-  }
-
   root.querySelector('[data-action="analyze"]')?.addEventListener('click', () => {
     if (!pendingImg) return
-    const paletteSize = +root.querySelector('[data-action="palette-size"]').value
-    const maxSteps = +root.querySelector('[data-action="max-steps"]').value
     setAnalyzing(true)
     // Defer so the "Menganalisa…" state paints before the heavy synchronous work.
     setTimeout(() => {
       try {
-        const analysis = analyzeImage(pendingImg, state.paints, { paletteSize, maxSteps })
+        const analysis = analyzeImage(pendingImg, state.paints)
         setAnalysis(analysis)
         setTab('palette')
       } catch (err) {

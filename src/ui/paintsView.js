@@ -2,6 +2,7 @@
 import { addPaint, removePaint, setPaints, state } from '../state.js'
 import { exportPaints, parseImported } from '../storage.js'
 import { escapeHtml, swatch, emptyState } from './components.js'
+import { PIGMENTS } from '../pigments.js'
 
 export function renderPaints(s) {
   const list = s.paints.length
@@ -22,11 +23,21 @@ export function renderPaints(s) {
       </div>
 
       <form class="paint-form" data-action="add-paint">
-        <input name="brand" placeholder="Merk (mis. Winsor & Newton)" maxlength="60" autocomplete="off">
+        <input name="brand" placeholder="Merk (opsional)" maxlength="60" autocomplete="off">
         <input name="name" placeholder="Nama warna (mis. Ultramarine)" maxlength="60" autocomplete="off" required>
-        <input name="hex" type="color" value="#3a6ea5" title="Pilih warna">
+        <input type="hidden" name="hex">
         <button class="btn" type="submit">+ Tambah</button>
       </form>
+
+      <div class="pigment-picker">
+        <p class="muted">Pilih warna pigmen yang paling mirip dengan catmu:</p>
+        <div class="pigment-grid">
+          ${PIGMENTS.map(
+            (p) =>
+              `<button type="button" class="pigment" data-hex="${p.hex}" data-name="${escapeHtml(p.name)}" style="--c:${p.hex}" title="${escapeHtml(p.name)}"><span></span></button>`,
+          ).join('')}
+        </div>
+      </div>
 
       ${list}
       <p class="count muted">${s.paints.length} cat air tersimpan.</p>
@@ -46,14 +57,29 @@ function paintRow(p) {
 }
 
 export function bindPaints(root, onError) {
+  const grid = root.querySelector('.pigment-grid')
+  const hexField = root.querySelector('input[name="hex"]')
+  const nameInput = root.querySelector('input[name="name"]')
+
+  grid?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.pigment')
+    if (!btn) return
+    grid.querySelectorAll('.pigment.selected').forEach((b) => b.classList.remove('selected'))
+    btn.classList.add('selected')
+    hexField.value = btn.dataset.hex
+    if (!nameInput.value.trim()) nameInput.value = btn.dataset.name
+  })
+
   root.querySelector('[data-action="add-paint"]')?.addEventListener('submit', (e) => {
     e.preventDefault()
     const f = e.currentTarget
     const name = f.name.value.trim()
     if (!name) return
+    if (!f.hex.value) {
+      onError?.('Pilih warna pigmen yang paling mirip dulu.')
+      return
+    }
     addPaint({ brand: f.brand.value, name, hex: f.hex.value })
-    f.reset()
-    f.hex.value = '#3a6ea5'
   })
 
   root.querySelectorAll('[data-action="remove"]').forEach((b) =>
